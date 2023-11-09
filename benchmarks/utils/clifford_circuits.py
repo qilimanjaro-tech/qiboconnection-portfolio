@@ -51,7 +51,7 @@ class CliffordGate:
     """
 
     def __init__(self, idx: int) -> None:
-        if not (0 <= idx <= 23):
+        if not 0 <= idx <= 23:
             raise IndexError("Clifford index must be between 0 and 23")
         self.idx = idx
         self._gate = CLIFFORD_GATES[idx]
@@ -62,22 +62,6 @@ class CliffordGate:
         Returns the inverse as a CliffordGate object
         """
         return CliffordGate(CLIFFORD_INVERSES[self.idx])
-
-    def decompose(self) -> list[str]:
-        """Returns the decomposition of the Clifford gate into
-        primitives gates."""
-        return [self.prim_gates[gate]["name"] for gate in map(int, str(self._gate))]
-
-    @property
-    def matrix(self) -> np.ndarray:
-        """
-        Returns matrix representation of Clifford gate
-        """
-        u = np.identity(2)
-        # Reverse order of matrices
-        for gate in list(map(int, str(self._gate)))[::-1]:
-            u = u @ PRIMITIVE_GATES[gate]["gate"].matrix
-        return u
 
     def circuit(self, qubit_idx: int) -> Circuit:
         circuit = Circuit(qubit_idx + 1)
@@ -106,18 +90,18 @@ class CliffordGate:
 
 
 PRIMITIVE_GATES = {
-    0: {"name": "I", "inv": 0, "gate": lambda qubit_idx: gates.I(qubit_idx)},
+    0: {"name": "I", "inv": 0, "gate": gates.I},
     1: {"name": "X_pi/2", "inv": 31, "gate": lambda qubit_idx: gates.RX(qubit_idx, theta=np.pi / 2)},
     2: {"name": "Y_pi/2", "inv": 42, "gate": lambda qubit_idx: gates.RY(qubit_idx, theta=np.pi / 2)},
-    3: {"name": "X_pi", "inv": 3, "gate": lambda qubit_idx: gates.X(qubit_idx)},
-    4: {"name": "Y_pi", "inv": 4, "gate": lambda qubit_idx: gates.Y(qubit_idx)},
+    3: {"name": "X_pi", "inv": 3, "gate": gates.X},
+    4: {"name": "Y_pi", "inv": 4, "gate": gates.Y},
 }
 """Dictionary containing the 5 primitive gates used in the RB experiment. Each gate is represented by an index."""
 
 CLIFFORD_GATES = [0, 21, 123, 3, 214, 124, 4, 2134, 12, 34, 213, 1234, 23, 13]
-CLIFFORD_GATES += [1214, 24, 1, 121, 234, 14, 12134, 2, 134, 1213]
 """List of clifford gates used in the RB experiment. Each element of the list contains several digits, which
 represent the matrix multiplication of the primitive gates defined above."""
+CLIFFORD_GATES += [1214, 24, 1, 121, 234, 14, 12134, 2, 134, 1213]
 
 CLIFFORD_INVERSES = [0, 2, 1, 3, 8, 10, 6, 11, 4, 9, 5, 7, 12, 16, 23, 21, 13, 17, 18, 19, 20, 15, 22, 14]
 """List containing the inverse of each clifford gate in the CLIFFORD_GATES list."""
