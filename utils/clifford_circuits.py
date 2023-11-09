@@ -1,6 +1,5 @@
 import numpy as np
-import qililab as ql
-from qibo.gates import M
+from qibo import gates
 from qibo.models import Circuit
 
 
@@ -36,7 +35,7 @@ def clifford_circuits(
         # add inverse to sequence
         circuit = circuit + unitary.inverse.circuit(qubit_idx=qubit_idx)
         # add measurement gates
-        circuit.add(M(qubit_idx))
+        circuit.add(gates.M(qubit_idx))
 
         # append to lists
         circuits.append(circuit)
@@ -107,17 +106,17 @@ class CliffordGate:
 
 
 PRIMITIVE_GATES = {
-    0: {"name": "I", "inv": 0, "gate": lambda qubit_idx: ql.Drag(q=qubit_idx, theta=0, phase=0)},
-    1: {"name": "X_pi/2", "inv": 31, "gate": lambda qubit_idx: ql.Drag(q=qubit_idx, theta=np.pi / 2, phase=0)},
-    2: {"name": "Y_pi/2", "inv": 42, "gate": lambda qubit_idx: ql.Drag(q=qubit_idx, theta=np.pi / 2, phase=np.pi / 2)},
-    3: {"name": "X_pi", "inv": 3, "gate": lambda qubit_idx: ql.Drag(q=qubit_idx, theta=np.pi, phase=0)},
-    4: {"name": "Y_pi", "inv": 4, "gate": lambda qubit_idx: ql.Drag(q=qubit_idx, theta=np.pi, phase=np.pi / 2)},
+    0: {"name": "I", "inv": 0, "gate": lambda qubit_idx: gates.I(qubit_idx)},
+    1: {"name": "X_pi/2", "inv": 31, "gate": lambda qubit_idx: gates.RX(qubit_idx, theta=np.pi / 2)},
+    2: {"name": "Y_pi/2", "inv": 42, "gate": lambda qubit_idx: gates.RY(qubit_idx, theta=np.pi / 2)},
+    3: {"name": "X_pi", "inv": 3, "gate": lambda qubit_idx: gates.X(qubit_idx)},
+    4: {"name": "Y_pi", "inv": 4, "gate": lambda qubit_idx: gates.Y(qubit_idx)},
 }
 """Dictionary containing the 5 primitive gates used in the RB experiment. Each gate is represented by an index."""
 
 CLIFFORD_GATES = [0, 21, 123, 3, 214, 124, 4, 2134, 12, 34, 213, 1234, 23, 13]
-"""List of clifford gates used in the RB experiment. Each element of the list contains several digits, which
 CLIFFORD_GATES += [1214, 24, 1, 121, 234, 14, 12134, 2, 134, 1213]
+"""List of clifford gates used in the RB experiment. Each element of the list contains several digits, which
 represent the matrix multiplication of the primitive gates defined above."""
 
 CLIFFORD_INVERSES = [0, 2, 1, 3, 8, 10, 6, 11, 4, 9, 5, 7, 12, 16, 23, 21, 13, 17, 18, 19, 20, 15, 22, 14]
