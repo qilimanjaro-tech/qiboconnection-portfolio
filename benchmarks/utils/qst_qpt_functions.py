@@ -412,3 +412,54 @@ def compute_gate_fidelity(R_ideal, R_exp):
 
 def compute_process_fidelity(R_ideal, R_exp):
     return np.trace(np.conj(R_ideal).T @ R_exp) / (2 * 2) ** 2
+
+
+from mpl_toolkits.mplot3d.axes3d import Axes3D
+import matplotlib as mpl
+from qutip.matplotlib_utilities import complex_phase_cmap
+
+
+def plot_matrix(M: np.ndarray, ax: mpl.axes.Axes | None = None):
+    """ Adapted from qtup `matrix_histogram_complex`. Draw a histogram for the amplitudes of matrix M, using the argument
+    of each element for coloring the bars.
+
+    Args:
+        M (np.ndarray): matrix to plot
+        ax (matplotlib.axes.Axes): matplotlib axis
+    """
+    if ax is None:
+        fig=plt.figure()
+        ax = fig.add_subplot(projection='3d')
+
+    n = np.size(M)
+    xpos, ypos = np.meshgrid(range(M.shape[0]), range(M.shape[1]))
+    xpos = xpos.T.flatten() - 0.5
+    ypos = ypos.T.flatten() - 0.5
+    zpos = np.zeros(n)
+    dx = dy = 0.8 * np.ones(n)
+    Mvec = M.flatten()
+    dz = abs(Mvec)
+
+    # make small numbers real, to avoid random colors
+    idx, = np.where(abs(Mvec) < 0.001)
+    Mvec[idx] = abs(Mvec[idx])
+
+    phase_min = -np.pi
+    phase_max = np.pi
+
+    norm = mpl.colors.Normalize(phase_min, phase_max)
+    cmap = complex_phase_cmap()
+
+    colors = cmap(norm(np.angle(Mvec)))
+
+    ax.bar3d(xpos, ypos, zpos, dx, dy, dz, color=colors)
+
+    xtics = -0.5 + np.arange(M.shape[0])
+    ax.axes.xaxis.set_major_locator(plt.FixedLocator(xtics))
+    ax.tick_params(axis='x', labelsize=12)
+    ytics = -0.5 + np.arange(M.shape[1])
+    ax.axes.yaxis.set_major_locator(plt.FixedLocator(ytics))
+    ax.tick_params(axis='y', labelsize=12)
+    ax.set_zlim3d([0, 1])  # use min/max
+
+    return ax
