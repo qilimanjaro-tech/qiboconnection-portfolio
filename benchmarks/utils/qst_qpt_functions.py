@@ -9,6 +9,11 @@ from itertools import product
 
 from scipy.optimize import minimize
 
+from mpl_toolkits.mplot3d.axes3d import Axes3D
+import matplotlib as mpl
+from qutip.matplotlib_utilities import complex_phase_cmap
+
+import matplotlib.pyplot as plt
 
 def basic_rotations_36states(qubit):
     return [
@@ -414,9 +419,7 @@ def compute_process_fidelity(R_ideal, R_exp):
     return np.trace(np.conj(R_ideal).T @ R_exp) / (2 * 2) ** 2
 
 
-from mpl_toolkits.mplot3d.axes3d import Axes3D
-import matplotlib as mpl
-from qutip.matplotlib_utilities import complex_phase_cmap
+
 
 
 def plot_matrix(M: np.ndarray, ax: mpl.axes.Axes | None = None):
