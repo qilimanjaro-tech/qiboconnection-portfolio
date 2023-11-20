@@ -80,6 +80,25 @@ def convert_probabilities2measurementops(data_matrix_probs):
 
     return data_measurementops
 
+def prepare_linear_system_measurement_calibration(processed_data):
+    """
+    processed_data (array): numpy array of dimension (ncircuits=4, nbasiselements=4) containing the means of the bitstring experiment outcomes.
+    """
+    ideal_measurements = np.zeros(12)
+    coeffs_mat = np.zeros((12, 12))
+    
+    coeffs_mat = np.zeros((12, 12))
+
+    ## stacked IZ, ZI and ZZ ideal measurements of each experiment, array of 3x3x3x3
+    ideal_measurements = np.array([obtain_expectation_values_2qubits(x) for x in np.eye(4)]).flatten()
+
+    for alpha, (experiment_index, operator_index) in enumerate(product(range(4), range(3))):
+        data_currentcirc = processed_data[experiment_index]
+        means_pauliobs = obtain_expectation_values_2qubits(data_currentcirc)
+        coeffs_mat[alpha, operator_index*4 : 4*(operator_index+1)] += np.append(1, means_pauliobs)
+
+    return coeffs_mat, ideal_measurements
+
 
 ## QST system functions
 
