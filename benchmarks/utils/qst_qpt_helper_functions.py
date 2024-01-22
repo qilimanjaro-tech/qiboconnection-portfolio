@@ -1,9 +1,8 @@
+import numpy as np
 from itertools import product
 
-import numpy as np
-from qibo.gates import RX, RY, I, X, Y, Z
 from qibo.models import Circuit
-
+from qibo.gates import I, X, Y, Z, RX, RY
 
 def six_operators(qubit):
     return [
@@ -15,7 +14,6 @@ def six_operators(qubit):
         RY(qubit, -np.pi / 2),
     ]
 
-
 Pn_ops = [I(0), X(0), Y(0), Z(0)]
 Mi_ops = [I(0), Z(0)]
 
@@ -23,10 +21,9 @@ Mi_ops = [I(0), Z(0)]
 ### Data format processing
 def get_basis_elements_dict(nqubits):
     basis_elements = {}
-    for i, x in enumerate(product(["0", "1"], repeat=nqubits)):
-        basis_elements["".join(x)] = i
+    for i, x in enumerate(product(['0', '1'], repeat = nqubits)):
+        basis_elements[''.join(x)] = i
     return basis_elements
-
 
 def process_returned_dataformat(results, nqubits=2):
     """Organises the results returned by qiboconnection into a matrix.
@@ -53,15 +50,19 @@ def obtain_expectation_values_2qubits(array_probs_binary):  ## 00 01 10 11
     order of the product iterator, but it exchanges the order of first and second qubit (i.e.,
     the qubit we set for the inner loop will appear as the outer one).
     """
-    signs_op_diagonal = np.array([[1, -1, 1, -1], [1, 1, -1, -1], [1, -1, -1, 1]])  # IZ  # ZI  # ZZ
-    observables = ["IZ", "ZI", "ZZ"]
+    signs_op_diagonal = np.array([
+                                [1, -1, 1, -1], #IZ
+                                [1, 1, -1, -1], #ZI
+                                [1, -1, -1, 1]  #ZZ
+                                ])
+    observables = ['IZ', 'ZI', 'ZZ']
     observables_probabilities = np.zeros(3)
     for i, _ in enumerate(observables):
         observables_probabilities[i] = array_probs_binary @ signs_op_diagonal[i]
-
+    
     return observables_probabilities
 
-
+  
 def convert_probabilities2measurementops(data_matrix_probs):
     """Turns bitstring probabilities into the expectation values of the IZ, ZI and ZZ
     operators.
@@ -69,26 +70,23 @@ def convert_probabilities2measurementops(data_matrix_probs):
     Args:
         data_matrix_probs (array): matrix containing the probabilities for each bitstring
                                     for a set of circuits.
-
+                                    
     Returns:
         array: matrix containing the expectation values of operators IZ, ZI and ZZ for each circuit
     """
     ncircuits = len(data_matrix_probs)
-
     data_measurementops = np.zeros((ncircuits, 3))
     for i in range(ncircuits):
         data_measurementops[i] += obtain_expectation_values_2qubits(data_matrix_probs[i])
 
     return data_measurementops
 
-
+  
 def prepare_linear_system_measurement_calibration(processed_data):
     """
     processed_data (array): numpy array of dimension (ncircuits=4, nbasiselements=4) containing the means of the bitstring experiment outcomes.
     """
     ideal_measurements = np.zeros(12)
-    coeffs_mat = np.zeros((12, 12))
-
     coeffs_mat = np.zeros((12, 12))
 
     ## stacked IZ, ZI and ZZ ideal measurements of each experiment, array of 3x3x3x3
@@ -103,8 +101,6 @@ def prepare_linear_system_measurement_calibration(processed_data):
 
 
 ## QST system functions
-
-
 def get_weights_state_tomography():  ### METHOD FOR QST
     """Method for QST.
     Calculates Tr[U_k^dag M_i U_k P_n] where P_n = {I, X, Y, Z}^{\otimes 2} and M_i = {II, IZ, ZI, ZZ}
@@ -113,10 +109,7 @@ def get_weights_state_tomography():  ### METHOD FOR QST
     basic_rotations_36states = six_operators(0)
     combs = list(product(basic_rotations_36states, basic_rotations_36states))
     weights_state_tomography = np.zeros((3, 16, len(combs)))
-
-    Mi_circuit_gates = list(product(Mi_ops, repeat=2))[
-        1:
-    ]  ## we remove the identity, so that we are left with IZ, ZI, ZZ
+    Mi_circuit_gates = list(product(Mi_ops, repeat=2))[1:] ## we remove the identity, so that we are left with IZ, ZI, ZZ
     for k, comb in enumerate(combs):
         R1 = comb[0]
         R2 = comb[1]
@@ -130,13 +123,12 @@ def get_weights_state_tomography():  ### METHOD FOR QST
             d.add(mi_gates[0])
             d.add(mi_gates[1].on_qubits({mi_gates[1].target_qubits[0]: 1}))
             m_i = d.unitary()
-
             for n, pn_gates in enumerate(product(Pn_ops, repeat=2)):
                 f = Circuit(2)
                 f.add(pn_gates[0])
                 f.add(pn_gates[1].on_qubits({pn_gates[1].target_qubits[0]: 1}))
                 P_n = f.unitary()
-
+                
                 weights_state_tomography[i, n, k] = np.trace(np.real(np.conj(u_k).T @ m_i @ u_k @ P_n))
 
     return weights_state_tomography
@@ -254,6 +246,7 @@ def prepare_linear_system_QPT(state_reconstruction_paulibasis):
 
             for m in range(16):
                 beta = 16 * n + m
+                
                 coeffs_mat[alpha, beta] += weights_process_tomography[m, l]
     return coeffs_mat, independent_term
 
@@ -272,12 +265,11 @@ def get_ideal_R_matrix(ideal_operator):
         vec_in = np.zeros(16)
         vec_in[n] = 1
         rho_in = take_pauli_reconstructed_state_to_density_matrix(vec_in)  # ideal transformation
-
         rho_out = ideal_operator @ rho_in @ np.conj(ideal_operator).T
         vec_out = take_density_matrix_to_pauli_basis(rho_out)
         R_mat[:, n] = vec_out
     return R_mat
-
+  
 
 def compute_gate_fidelity(R_ideal, R_exp):
     return (np.trace(np.conj(R_ideal).T @ R_exp) + 2 * 2) / ((2 * 2) ** 2 + 2 * 2)
