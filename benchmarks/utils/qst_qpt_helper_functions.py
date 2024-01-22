@@ -97,10 +97,12 @@ def prepare_linear_system_measurement_calibration(processed_data):
         means_pauliobs = obtain_expectation_values_2qubits(data_currentcirc)
         coeffs_mat[alpha, operator_index * 4 : 4 * (operator_index + 1)] += np.append(1, means_pauliobs)
 
+
     return coeffs_mat, ideal_measurements
 
 
 ## QST system functions
+
 def get_weights_state_tomography():  ### METHOD FOR QST
     """Method for QST.
     Calculates Tr[U_k^dag M_i U_k P_n] where P_n = {I, X, Y, Z}^{\otimes 2} and M_i = {II, IZ, ZI, ZZ}
@@ -128,7 +130,7 @@ def get_weights_state_tomography():  ### METHOD FOR QST
                 f.add(pn_gates[0])
                 f.add(pn_gates[1].on_qubits({pn_gates[1].target_qubits[0]: 1}))
                 P_n = f.unitary()
-                
+
                 weights_state_tomography[i, n, k] = np.trace(np.real(np.conj(u_k).T @ m_i @ u_k @ P_n))
 
     return weights_state_tomography
@@ -164,7 +166,6 @@ def prepare_linear_system_QST(measurement_calibration_weights, means_ops_Rcircui
 
 ##  Additional QPT functions
 
-
 def take_pauli_reconstructed_state_to_density_matrix(rho_paulivec):
     """
     Takes in the Pauli vector of length 16 and returns the operator
@@ -172,11 +173,13 @@ def take_pauli_reconstructed_state_to_density_matrix(rho_paulivec):
     """
     dim_hilbert_space = int(np.sqrt(len(rho_paulivec)))
     rho = 1j * 0.0 * np.eye(dim_hilbert_space)
+
     for n, pn_gates in enumerate(product(Pn_ops, repeat=2)):
         f = Circuit(2)
         f.add(pn_gates[0])
         f.add(pn_gates[1].on_qubits({pn_gates[1].target_qubits[0]: 1}))
         P_n = f.unitary()
+
         rho += round(rho_paulivec[n], 3) * P_n
 
     return rho
@@ -246,7 +249,7 @@ def prepare_linear_system_QPT(state_reconstruction_paulibasis):
 
             for m in range(16):
                 beta = 16 * n + m
-                
+
                 coeffs_mat[alpha, beta] += weights_process_tomography[m, l]
     return coeffs_mat, independent_term
 
